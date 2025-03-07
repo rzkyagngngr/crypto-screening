@@ -9,13 +9,11 @@ const initializeClient = async () => {
       autoClose: 60000,
       puppeteerOptions: {
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'], // Penting untuk lingkungan server
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome', // Default ke Chrome sistem
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome',
       },
     });
-
     console.log('WhatsApp client connected');
-
     return client;
   } catch (error) {
     console.error('Failed to initialize WhatsApp client:', error.message);

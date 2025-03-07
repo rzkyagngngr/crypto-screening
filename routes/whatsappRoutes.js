@@ -1,8 +1,36 @@
-const express = require('express');
-const router = express.Router();
+const whatsappService = require('../services/whatsappService');
 const whatsappController = require('../controllers/whatsappController');
 
-router.post('/send-group-message', whatsappController.sendGroupMessage);
-router.post('/schedule-group-message', whatsappController.scheduleGroupMessage);
+const setupWhatsAppRoutes = async () => {
+  try {
+    const client = await whatsappService.initializeClient();
 
-module.exports = router;
+    // Mendengarkan pesan masuk
+    client.onMessage(async (message) => {
+      try {
+        const body = message.body || ''; // Isi pesan
+        const from = message.from; // Nomor pengirim
+        const lowerMessage = body.toLowerCase().trim();
+
+        console.log(`Message received from ${from}: ${body}`);
+
+        if (lowerMessage.startsWith('.screen')) {
+          await whatsappController.formatScreenTop50CoinsMessage(from);
+        } else if (lowerMessage.startsWith('.new')) {
+          await whatsappController.formatNewCoinsPotentialMessage(from);
+        } else if (body.startsWith('.')) {
+          await whatsappService.sendMessage(from, 'Perintah tidak dikenali. Gunakan .screen atau .new');
+        }
+      } catch (error) {
+        console.error('Error handling WhatsApp message:', error.message);
+        await whatsappService.sendMessage(from, 'Terjadi kesalahan, coba lagi nanti.');
+      }
+    });
+  } catch (error) {
+    console.error('Error setting up WhatsApp routes:', error.message);
+  }
+};
+
+module.exports = {
+  setupWhatsAppRoutes,
+};

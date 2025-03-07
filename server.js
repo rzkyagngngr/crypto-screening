@@ -16,7 +16,7 @@ async function startServer() {
   try {
     console.log('Menghubungkan ke MongoDB...');
     await mongoose.connect(
-      'mongodb://rkyagung:rkyagung@crypto1-shard-00-00.5wz7y.mongodb.net:27017,crypto1-shard-00-01.5wz7y.mongodb.net:27017,crypto1-shard-00-02.5wz7y.mongodb.net:27017/cryptoDB?ssl=true&replicaSet=atlas PRIV-34xnzw-shard-0&authSource=admin&retryWrites=true&w=majority&appName=crypto1',
+      'mongodb://rkyagung:rkyagung@crypto1-shard-00-00.5wz7y.mongodb.net:27017,crypto1-shard-00-01.5wz7y.mongodb.net:27017,crypto1-shard-00-02.5wz7y.mongodb.net:27017/cryptoDB?ssl=true&replicaSet=atlas-34xnzw-shard-0&authSource=admin&retryWrites=true&w=majority&appName=crypto1',
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,

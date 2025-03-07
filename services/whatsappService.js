@@ -14,11 +14,7 @@ const initializeClient = async () => {
 
     console.log('WhatsApp client connected');
 
-    client.on('disconnected', (reason) => {
-      console.log('WhatsApp client disconnected:', reason);
-    });
-
-    return client; // Kembalikan client agar bisa digunakan di routes
+    return client; // Kembalikan client untuk digunakan di routes
   } catch (error) {
     console.error('Failed to initialize WhatsApp client:', error.message);
     throw error;
@@ -27,6 +23,7 @@ const initializeClient = async () => {
 
 const sendMessage = async (target, text) => {
   try {
+    if (!client) throw new Error('WhatsApp client not initialized');
     await client.sendText(target, text);
   } catch (error) {
     console.error('Error sending WhatsApp message:', error.message);
@@ -34,7 +31,13 @@ const sendMessage = async (target, text) => {
   }
 };
 
+const getClient = () => {
+  if (!client) throw new Error('WhatsApp client not initialized');
+  return client;
+};
+
 module.exports = {
   initializeClient,
   sendMessage,
+  getClient, // Tambahkan ini untuk akses client di routes
 };

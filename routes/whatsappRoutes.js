@@ -5,7 +5,7 @@ const setupWhatsAppRoutes = async () => {
   try {
     const client = await whatsappService.initializeClient();
 
-    // Mendengarkan pesan masuk
+    // Mendengarkan pesan masuk menggunakan onMessage
     client.onMessage(async (message) => {
       try {
         const body = message.body || ''; // Isi pesan
@@ -26,8 +26,11 @@ const setupWhatsAppRoutes = async () => {
         await whatsappService.sendMessage(from, 'Terjadi kesalahan, coba lagi nanti.');
       }
     });
+
+    console.log('WhatsApp message listener set up');
   } catch (error) {
     console.error('Error setting up WhatsApp routes:', error.message);
+    throw error;
   }
 };
 

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Validate WhatsApp Connection</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+    h2 { color: #333; }
+    img { max-width: 300px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <% if (qrCode) { %>
+    <h2>Scan QR Code untuk Koneksi WhatsApp</h2>
+    <img src="<%= qrCode %>" alt="QR Code">
+  <% } else if (status) { %>
+    <h2><%= status %></h2>
+  <% } else { %>
+    <h2>Menunggu koneksi WhatsApp...</h2>
+  <% } %>
+</body>
+</html>

@@ -1,0 +1,13 @@
+html
+  head
+    title Validate WhatsApp Connection
+    style
+      | body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+      | h2 { color: #333; }
+      | img { max-width: 300px; margin-top: 20px; }
+  body
+    if qrCode
+      h2 Scan QR Code untuk Koneksi WhatsApp
+      img(src=qrCode alt="QR Code")
+    else
+      h2= status

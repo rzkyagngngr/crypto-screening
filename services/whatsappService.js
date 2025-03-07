@@ -10,7 +10,7 @@ const initializeClient = async () => {
       puppeteerOptions: {
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox'], // Penting untuk lingkungan server
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null, // Gunakan env jika ada
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome', // Default ke Chrome sistem
       },
     });
 

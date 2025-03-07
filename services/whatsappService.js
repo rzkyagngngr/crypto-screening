@@ -5,16 +5,18 @@ let client;
 const initializeClient = async () => {
   try {
     client = await wppconnect.create({
-      session: 'crypto-bot', // Nama sesi
-      autoClose: 60000, // Tutup otomatis setelah 60 detik idle
+      session: 'crypto-bot',
+      autoClose: 60000,
       puppeteerOptions: {
-        headless: true, // Jalankan tanpa UI
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'], // Penting untuk lingkungan server
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null, // Gunakan env jika ada
       },
     });
 
     console.log('WhatsApp client connected');
 
-    return client; // Kembalikan client untuk digunakan di routes
+    return client;
   } catch (error) {
     console.error('Failed to initialize WhatsApp client:', error.message);
     throw error;
@@ -39,5 +41,5 @@ const getClient = () => {
 module.exports = {
   initializeClient,
   sendMessage,
-  getClient, // Tambahkan ini untuk akses client di routes
+  getClient,
 };

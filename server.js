@@ -7,10 +7,23 @@ const newReleasedCoinRoutes = require('./routes/newReleasedCoinRoutes');
 const icoCoinRoutes = require('./routes/icoCoinRoutes');
 const whatsappRoutes = require('./routes/whatsappRoutes');
 const whatsappController = require('./controllers/whatsappController');
+const whatsappService = require('./services/whatsappService'); // Pastikan ini diimpor
 require('dotenv').config();
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
+
+async function sendRestartNotification(client, ngrokUrl) {
+  const target = process.env.WHATSAPP_GROUP_ID; // Kirim ke grup yang ditentukan di .env
+  const message = `*Server Restart Notification*\n\nServer telah direstart pada ${new Date().toLocaleString('id-ID')}.\nAkses halaman di: ${ngrokUrl || 'http://localhost:' + port}`;
+
+  try {
+    await whatsappService.sendMessage(target, message);
+    console.log('Restart notification sent to WhatsApp');
+  } catch (error) {
+    console.error('Failed to send restart notification:', error.message);
+  }
+}
 
 async function startServer() {
   try {
@@ -61,22 +74,29 @@ async function startServer() {
       console.log(`Server running at http://localhost:${port}`);
     });
 
+    // Inisiasi WhatsApp client untuk notifikasi restart
+    const whatsappClient = await whatsappService.initializeClient();
+
     // Konfigurasi Ngrok
+    let ngrokUrl = null;
     if (process.env.NGROK_ENABLED === 'true') {
       if (!process.env.NGROK_AUTH_TOKEN) {
         throw new Error('NGROK_AUTH_TOKEN is required when NGROK_ENABLED is true');
       }
 
-      const url = await ngrok.connect({
+      ngrokUrl = await ngrok.connect({
         proto: 'http',
         addr: port,
         authtoken: process.env.NGROK_AUTH_TOKEN,
       });
 
-      console.log(`Ngrok tunnel active at: ${url}`);
+      console.log(`Ngrok tunnel active at: ${ngrokUrl}`);
     } else {
       console.log('Ngrok is disabled (NGROK_ENABLED=false)');
     }
+
+    // Kirim notifikasi restart setelah semua siap
+    await sendRestartNotification(whatsappClient, ngrokUrl);
 
   } catch (err) {
     console.error('Failed to start server:', err.message);

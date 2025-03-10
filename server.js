@@ -7,17 +7,19 @@ const newReleasedCoinRoutes = require('./routes/newReleasedCoinRoutes');
 const icoCoinRoutes = require('./routes/icoCoinRoutes');
 const whatsappRoutes = require('./routes/whatsappRoutes');
 const whatsappController = require('./controllers/whatsappController');
-const whatsappService = require('./services/whatsappService'); // Pastikan ini diimpor
+const whatsappService = require('./services/whatsappService');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-async function sendRestartNotification(client, ngrokUrl) {
-  const target = process.env.WHATSAPP_GROUP_ID; // Kirim ke grup yang ditentukan di .env
+async function sendRestartNotification(ngrokUrl) {
+  const target = process.env.WHATSAPP_GROUP_ID;
   const message = `*Server Restart Notification*\n\nServer telah direstart pada ${new Date().toLocaleString('id-ID')}.\nAkses halaman di: ${ngrokUrl || 'http://localhost:' + port}`;
 
   try {
+    const client = whatsappService.getClient(); // Gunakan client yang sudah ada
+    if (!client) throw new Error('WhatsApp client not yet initialized');
     await whatsappService.sendMessage(target, message);
     console.log('Restart notification sent to WhatsApp');
   } catch (error) {
@@ -38,7 +40,7 @@ async function startServer() {
     console.log('Connected to MongoDB Atlas (cryptoDB)');
 
     console.log('Memulai inisiasi WhatsApp dan setup routes...');
-    await whatsappRoutes.setupWhatsAppRoutes();
+    await whatsappRoutes.setupWhatsAppRoutes(); // Inisiasi client di sini
     console.log('WhatsApp routes setup completed');
 
     app.use(express.json());
@@ -74,9 +76,6 @@ async function startServer() {
       console.log(`Server running at http://localhost:${port}`);
     });
 
-    // Inisiasi WhatsApp client untuk notifikasi restart
-    const whatsappClient = await whatsappService.initializeClient();
-
     // Konfigurasi Ngrok
     let ngrokUrl = null;
     if (process.env.NGROK_ENABLED === 'true') {
@@ -96,7 +95,7 @@ async function startServer() {
     }
 
     // Kirim notifikasi restart setelah semua siap
-    await sendRestartNotification(whatsappClient, ngrokUrl);
+    await sendRestartNotification(ngrokUrl);
 
   } catch (err) {
     console.error('Failed to start server:', err.message);

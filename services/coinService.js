@@ -36,6 +36,9 @@ async function getBinanceVolume(symbol) {
 
 async function getTop50RankedCoins() {
   const top200 = await getTop200CMC();
+  const symbols = top200.map(coin => coin.symbol);
+  const metadata = await getCoinMetadata(symbols);
+
   const coinScores = [];
 
   for (const coin of top200) {
@@ -49,6 +52,13 @@ async function getTop50RankedCoins() {
     const adoptionScore = coinModel.calculateAdoptionScore(volumeUsd);
     const totalScore = utilityScore + teamScore + adoptionScore;
 
+    const coinMetadata = metadata[symbol];
+    const { classification, isFiatRepresenting } = classifyAndFilterCoin(coin, coinMetadata);
+
+    if (isFiatRepresenting) {
+      continue; // Skip fiat representing coins
+    }
+
     coinScores.push({
       name,
       symbol,
@@ -59,6 +69,7 @@ async function getTop50RankedCoins() {
       gitMetrics,
       volumeUsd,
       marketCap: coin.quote.USD.market_cap,
+      classification,
     });
 
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -82,7 +93,69 @@ async function getTop50RankedCoins() {
     volumeUsd: coin.volumeUsd,
     marketCap: coin.marketCap,
     coinType: coinModel.determineCoinType(coin, maxAltcoinMarketCap, minAltcoinMarketCap),
+    classification: coin.classification,
   }));
+}
+
+// New function to fetch coin metadata
+async function getCoinMetadata(symbols) {
+  const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/info?symbol=${symbols.join(',')}`;
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-CMC_PRO_API_KEY': CMC_API_KEY,
+        'Accept': 'application/json'
+      },
+    });
+    const data = await response.json();
+    if (data.status.error_code !== 0) {
+      throw new Error(`CMC Metadata API error: ${data.status.error_message}`);
+    }
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching coin metadata:', error.message);
+    throw error;
+  }
+}
+
+// New function to classify and filter coins
+function classifyAndFilterCoin(coin, metadata) {
+  const tags = metadata.tags || [];
+  const category = metadata.category || 'unknown';
+  const platform = coin.platform;
+
+  let classification = 'unknown';
+  let isFiatRepresenting = false;
+
+  if (
+    tags.includes('stablecoin') ||
+    category === 'Stablecoin' ||
+    tags.includes('asset-backed-stablecoin') ||
+    tags.includes('fiat-stablecoin') ||
+    coin.name.toLowerCase().includes('wrapped') && coin.name.toLowerCase().includes('usd')
+  ) {
+    isFiatRepresenting = true;
+  }
+
+  if (!isFiatRepresenting) {
+    if (!platform) {
+      classification = 'layer-1';
+    } else if (platform) {
+      if (tags.includes('layer-2') || tags.includes('scaling')) {
+        classification = 'layer-2';
+      } else if (tags.includes('interoperability') || tags.includes('cross-chain')) {
+        classification = 'layer-0';
+      } else {
+        classification = 'token';
+      }
+    }
+  }
+
+  return {
+    classification,
+    isFiatRepresenting
+  };
 }
 
 async function saveTop50CoinsToMongo() {
@@ -203,6 +276,8 @@ async function screenTop50Coins() {
 
     screenedResults.push({
       symbol: coin.symbol,
+      classification: coin.classification,
+      coinType: coin.coinType,
       indicators: {
         ema: {
           score: emaScore,

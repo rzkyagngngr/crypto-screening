@@ -12,6 +12,7 @@ const coinSchema = new mongoose.Schema({
   volumeUsd: Number,
   marketCap: Number,
   coinType: String,
+  classification: String,
 });
 
 const screenedCoinSchema = new mongoose.Schema({

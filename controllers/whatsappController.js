@@ -15,6 +15,8 @@ const formatScreenTop50CoinsMessage = async (target) => {
         message += `   Skor: *${coin.totalScreeningScore || 0}*\n`;
         message += `   Sinyal: ${coin.signals.length > 0 ? coin.signals.map(s => `_${s}_`).join(', ') : '_Tidak ada_'}\n`;
         message += `   Volume: _${coin.volume?.toLocaleString() || 'N/A'}_\n`;
+        message += `   Type: _${coin.coinType?.toLocaleString() || 'N/A'}_\n`;
+        message += `   Klasifikasi: _${coin.classification?.toLocaleString() || 'N/A'}_\n`;
         message += `   Fluktuasi: ${coin.volumeFluctuation > 0 ? '*' : '~'}${coin.volumeFluctuation?.toFixed(2) || 'N/A'}%${coin.volumeFluctuation > 0 ? '*' : '~'}\n\n`;
       });
     await whatsappService.sendMessage(target, message);

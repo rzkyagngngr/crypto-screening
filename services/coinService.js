@@ -1,6 +1,4 @@
 const axios = require('axios');
-const dns = require('dns');
-const { Resolver } = require('dns');
 const { Coin, ScreenedCoin } = require('../models/coinModel');
 const githubService = require('./githubService');
 const { calculateEMA, calculateBollingerBands, calculateStochastic, calculateVWAP, calculateRSI, calculateMACD } = require('../utils/technicalIndicators');
@@ -25,32 +23,10 @@ async function getTop200CMC() {
   return response.data.data;
 }
 
-// Create a custom DNS resolver
-const resolver = new Resolver();
-resolver.setServers(['1.1.1.1', '1.0.0.1']); // Cloudflare DNS servers
-
-async function resolveDNS(hostname) {
-  return new Promise((resolve, reject) => {
-    resolver.resolve4(hostname, (err, addresses) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(addresses[0]); // Return the first IP address
-      }
-    });
-  });
-}
-
 async function getBinanceVolume(symbol) {
   try {
-    const hostname = 'api.binance.com';
-    const ip = await resolveDNS(hostname);
-    const url = `http://${ip}/api/v3/ticker/24hr?symbol=${symbol}USDT`;
-
-    const response = await axios.get(url, {
-      headers: { Host: hostname } // Set the Host header to the original hostname
-    });
-
+    const url = `https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`;
+    const response = await axios.get(url);
     return parseFloat(response.data.quoteVolume || 0);
   } catch (error) {
     console.warn(`Volume fetch failed for ${symbol}: ${error.message}`);
@@ -192,14 +168,8 @@ async function saveTop50CoinsToMongo() {
 
 async function getOHLCV(symbol, interval = '15m', limit = 50) {
   try {
-    const hostname = 'api.binance.com';
-    const ip = await resolveDNS(hostname);
-    const url = `http://${ip}/api/v3/klines?symbol=${symbol}USDT&interval=${interval}&limit=${limit}`;
-
-    const response = await axios.get(url, {
-      headers: { Host: hostname } // Set the Host header to the original hostname
-    });
-
+    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}USDT&interval=${interval}&limit=${limit}`;
+    const response = await axios.get(url);
     const ohlcv = response.data.map(candle => ({
       time: candle[0],
       open: parseFloat(candle[1]),

@@ -25,14 +25,30 @@ async function getTop200CMC() {
   return response.data.data;
 }
 
+// Create a custom DNS resolver
+const resolver = new Resolver();
+resolver.setServers(['1.1.1.1', '1.0.0.1']); // Cloudflare DNS servers
+
+async function resolveDNS(hostname) {
+  return new Promise((resolve, reject) => {
+    resolver.resolve4(hostname, (err, addresses) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(addresses[0]); // Return the first IP address
+      }
+    });
+  });
+}
+
 async function getBinanceVolume(symbol) {
   try {
-    const url = `https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`;
+    const hostname = 'api.binance.com';
+    const ip = await resolveDNS(hostname);
+    const url = `http://${ip}/api/v3/ticker/24hr?symbol=${symbol}USDT`;
 
-    // Use the custom DNS resolver
     const response = await axios.get(url, {
-      adapter: require('axios/lib/adapters/http'),
-      dnsResolver: resolver
+      headers: { Host: hostname } // Set the Host header to the original hostname
     });
 
     return parseFloat(response.data.quoteVolume || 0);
@@ -174,18 +190,14 @@ async function saveTop50CoinsToMongo() {
   return true;
 }
 
-// Create a custom DNS resolver
-const resolver = new Resolver();
-resolver.setServers(['1.1.1.1', '1.0.0.1']); // Cloudflare DNS servers
-
 async function getOHLCV(symbol, interval = '15m', limit = 50) {
   try {
-    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}USDT&interval=${interval}&limit=${limit}`;
+    const hostname = 'api.binance.com';
+    const ip = await resolveDNS(hostname);
+    const url = `http://${ip}/api/v3/klines?symbol=${symbol}USDT&interval=${interval}&limit=${limit}`;
 
-    // Use the custom DNS resolver
     const response = await axios.get(url, {
-      adapter: require('axios/lib/adapters/http'),
-      dnsResolver: resolver
+      headers: { Host: hostname } // Set the Host header to the original hostname
     });
 
     const ohlcv = response.data.map(candle => ({

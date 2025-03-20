@@ -76,26 +76,26 @@ async function startServer() {
       console.log(`Server running at http://localhost:${port}`);
     });
 
-    // Konfigurasi Ngrok
-    let ngrokUrl = null;
-    if (process.env.NGROK_ENABLED === 'true') {
-      if (!process.env.NGROK_AUTH_TOKEN) {
-        throw new Error('NGROK_AUTH_TOKEN is required when NGROK_ENABLED is true');
-      }
+    // // Konfigurasi Ngrok
+    // let ngrokUrl = null;
+    // if (process.env.NGROK_ENABLED === 'true') {
+    //   if (!process.env.NGROK_AUTH_TOKEN) {
+    //     throw new Error('NGROK_AUTH_TOKEN is required when NGROK_ENABLED is true');
+    //   }
 
-      ngrokUrl = await ngrok.connect({
-        proto: 'http',
-        addr: port,
-        authtoken: process.env.NGROK_AUTH_TOKEN,
-      });
+    //   ngrokUrl = await ngrok.connect({
+    //     proto: 'http',
+    //     addr: port,
+    //     authtoken: process.env.NGROK_AUTH_TOKEN,
+    //   });
 
-      console.log(`Ngrok tunnel active at: ${ngrokUrl}`);
-    } else {
-      console.log('Ngrok is disabled (NGROK_ENABLED=false)');
-    }
+    //   console.log(`Ngrok tunnel active at: ${ngrokUrl}`);
+    // } else {
+    //   console.log('Ngrok is disabled (NGROK_ENABLED=false)');
+    // }
 
-    // Kirim notifikasi restart setelah semua siap
-    await sendRestartNotification(ngrokUrl);
+    // // Kirim notifikasi restart setelah semua siap
+    // await sendRestartNotification(ngrokUrl);
 
   } catch (err) {
     console.error('Failed to start server:', err.message);

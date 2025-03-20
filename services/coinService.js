@@ -1,4 +1,6 @@
 const axios = require('axios');
+const dns = require('dns');
+const { Resolver } = require('dns');
 const { Coin, ScreenedCoin } = require('../models/coinModel');
 const githubService = require('./githubService');
 const { calculateEMA, calculateBollingerBands, calculateStochastic, calculateVWAP, calculateRSI, calculateMACD } = require('../utils/technicalIndicators');
@@ -26,7 +28,13 @@ async function getTop200CMC() {
 async function getBinanceVolume(symbol) {
   try {
     const url = `https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}USDT`;
-    const response = await axios.get(url);
+
+    // Use the custom DNS resolver
+    const response = await axios.get(url, {
+      adapter: require('axios/lib/adapters/http'),
+      dnsResolver: resolver
+    });
+
     return parseFloat(response.data.quoteVolume || 0);
   } catch (error) {
     console.warn(`Volume fetch failed for ${symbol}: ${error.message}`);
@@ -166,10 +174,20 @@ async function saveTop50CoinsToMongo() {
   return true;
 }
 
+// Create a custom DNS resolver
+const resolver = new Resolver();
+resolver.setServers(['1.1.1.1', '1.0.0.1']); // Cloudflare DNS servers
+
 async function getOHLCV(symbol, interval = '15m', limit = 50) {
   try {
     const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}USDT&interval=${interval}&limit=${limit}`;
-    const response = await axios.get(url);
+
+    // Use the custom DNS resolver
+    const response = await axios.get(url, {
+      adapter: require('axios/lib/adapters/http'),
+      dnsResolver: resolver
+    });
+
     const ohlcv = response.data.map(candle => ({
       time: candle[0],
       open: parseFloat(candle[1]),
